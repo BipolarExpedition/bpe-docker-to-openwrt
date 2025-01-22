@@ -1,0 +1,70 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "bpe-docker-to-openwrt"
+dynamic = ["version"]
+description = ''
+readme = "README.md"
+requires-python = ">=3.8"
+license = "MIT"
+keywords = []
+authors = [
+  { name = "Doc1979", email = "lastdoc39@gmail.com" },
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+]
+dependencies = []
+
+[project.urls]
+Documentation = "https://github.com/BipolarExpedition/bpe-docker-to-openwrt#readme"
+Issues = "https://github.com/BipolarExpedition/bpe-docker-to-openwrt/issues"
+Source = "https://github.com/BipolarExpedition/bpe-docker-to-openwrt"
+
+[tool.hatch.version]
+path = "src/bpe_docker_to_openwrt/__about__.py"
+
+[tool.hatch.envs.default]
+path = ".venv"
+dependencies = [
+]
+
+[tool.hatch.envs.default.scripts]
+# script to run main() function in src/bpe_docker_to_openwrt/main.py
+main = "python src/bpe_docker_to_openwrt/main.py"
+
+[tool.hatch.envs.types]
+extra-dependencies = [
+  "mypy>=1.0.0",
+]
+[tool.hatch.envs.types.scripts]
+check = "mypy --install-types --non-interactive {args:src/bpe_docker_to_openwrt tests}"
+
+[tool.coverage.run]
+source_pkgs = ["bpe_docker_to_openwrt", "tests"]
+branch = true
+parallel = true
+omit = [
+  "src/bpe_docker_to_openwrt/__about__.py",
+]
+
+[tool.coverage.paths]
+bpe_docker_to_openwrt = ["src/bpe_docker_to_openwrt", "*/bpe-docker-to-openwrt/src/bpe_docker_to_openwrt"]
+tests = ["tests", "*/bpe-docker-to-openwrt/tests"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "no cov",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+]
