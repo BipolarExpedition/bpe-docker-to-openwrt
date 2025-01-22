@@ -26,6 +26,22 @@ classifiers = [
 ]
 dependencies = []
 
+[project.optional-dependencies]
+dev = [
+  "pytest",
+  "pytest-cov"
+]
+color = [
+  "rich"
+]
+
+[tool.hatch.envs.default]
+path = ".venv"
+dependencies = [
+  "pytest",
+  "pytest-cov"
+]
+
 [project.urls]
 Documentation = "https://github.com/BipolarExpedition/bpe-docker-to-openwrt#readme"
 Issues = "https://github.com/BipolarExpedition/bpe-docker-to-openwrt/issues"
@@ -34,10 +50,6 @@ Source = "https://github.com/BipolarExpedition/bpe-docker-to-openwrt"
 [tool.hatch.version]
 path = "src/bpe_docker_to_openwrt/__about__.py"
 
-[tool.hatch.envs.default]
-path = ".venv"
-dependencies = [
-]
 
 [tool.hatch.envs.default.scripts]
 # script to run main() function in src/bpe_docker_to_openwrt/main.py
