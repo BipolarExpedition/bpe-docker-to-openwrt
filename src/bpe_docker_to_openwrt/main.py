@@ -1,5 +1,5 @@
 #from typing import List
-from typing import Optional
+#from typing import Optional
 from typing import Dict
 from typing import Any
 from subprocess import CalledProcessError, CompletedProcess
@@ -7,6 +7,7 @@ from subprocess import run as runprocess
 from sys import stderr
 #from os import stdout
 import pathlib
+import re
 
 from bpe_docker_to_openwrt.RouterObject import RouterObject
 
@@ -39,7 +40,7 @@ except ImportError:
     pass
 # ---------------------------
 
-def getContainerIPs(doTest: bool = False, testRunReturn: CompletedProcess[str] = CompletedProcess(args=[], returncode=255)) -> Dict[str, str]:
+def getContainerIPs(replaceUnderscores: str = "-", replaceDots: str = ".", replaceColons: str = "-", replaceSymbols: str = "", doTest: bool = False, testRunReturn: CompletedProcess[str] = CompletedProcess(args=[], returncode=255)) -> Dict[str, str]:
     """Get a dictionary of docker container names and their IP addresses
     
     Uses the shell command: docker ps -q | xargs docker inspect --format '{{.Name}} {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' | sed 's/\\///'
@@ -48,7 +49,16 @@ def getContainerIPs(doTest: bool = False, testRunReturn: CompletedProcess[str] =
         Dict[str, str]: A dictionary of container names and their IP addresses
     """
 
+    # Note: regex is proving difficult to match, and capture multipe ips
+
     querryCmd = r"docker ps -q | xargs docker inspect --format '{{.Name}} {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' | sed 's/\///'"
+    #re_valid_name_followed_by_ips = re.compile(r"^([a-zA-Z0-9_\-\.\@\#\$\%]+)(?:\s+([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|[0-9a-fA-F:]+))+$", re.M | re.S)
+    #re_valid_name_followed_by_ips = re.compile(r"^([a-zA-Z0-9_\-\.\@\#\$\%]+)(\s*[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|\s*[0-9a-fA-F:]+)+$", re.M | re.S)
+
+    # I was strugling with capturing multiple ips. It would match those lines, but only capture one ip. I finally asked copilot for help and it gave me this regex
+    re_valid_name_followed_by_ips = re.compile(r"^([a-zA-Z0-9_\-\.\@\#\$\:\%]+)((?:\s+[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|\s+[0-9a-fA-F:])+)$", re.M | re.S)
+    re_match_symbol = re.compile(r"[\@\#\$\%\\]")
+        
     #print(querryCmd)
     if not doTest:
         try:
@@ -64,14 +74,22 @@ def getContainerIPs(doTest: bool = False, testRunReturn: CompletedProcess[str] =
         return {}
 
     outDict = {}
+    # TODO: Consider replacing the for loop with just the findall
     for line in result.stdout.split("\n"):
         if len(line) > 0:
-            # Assign array instead, just in case multiple ips are returned
-            returnArray = line.split(" ")
-            name = returnArray[0]
-            ip = returnArray[1]
-            if len(name) > 0 and len(ip) > 0:
-                outDict[name] = ip
+            # Redo this area to a regex match
+            match = re_valid_name_followed_by_ips.findall(line)
+            
+            if match is not None and len(match) > 0:
+                for m in match:
+                    name: str = m[0]
+                    ips = m[1].strip().split(" ")
+                    # TODO: Consider only adding ipv4 addresses
+                    if len(name) > 0:
+                        name = name.replace(r"_", replaceUnderscores).replace(r".", replaceDots).replace(r":", replaceColons)
+                        name = re_match_symbol.sub(replaceSymbols, name)
+                        # take only the first ip
+                        outDict[name] = ips[0]
             else:
                 stderr.write(f"WARNING: Could not parse line '{line}'\n")
 
@@ -84,13 +102,9 @@ def main():
 
     router: RouterObject = RouterObject("openwrt.lan", identity_file=identity_file)
 
-    container_listing: Dict[str, str] = {}
-    #last_container_listing: Dict[str, str] = {}
+    container_listing: Dict[str, str] = getContainerIPs()
 
-    #last_container_listing = container_listing
-    container_listing = getContainerIPs()
-
-    definedDNS = router.getDefinedExtraDNS() #"openwrt.lan", str(identity_file))
+    definedDNS = router.getDefinedExtraDNS()
     if definedDNS is not None:
         pprint(definedDNS)
         mappings = router.mappingsFromDefinitions(definedDNS)
