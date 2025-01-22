@@ -68,6 +68,7 @@ branch = true
 parallel = true
 omit = [
   "src/bpe_docker_to_openwrt/__about__.py",
+  "src/bpe_docker_to_openwrt/__init__.py"
 ]
 
 [tool.coverage.paths]

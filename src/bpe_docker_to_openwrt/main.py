@@ -56,7 +56,7 @@ def getContainerIPs(replaceUnderscores: str = "-", replaceDots: str = ".", repla
     #re_valid_name_followed_by_ips = re.compile(r"^([a-zA-Z0-9_\-\.\@\#\$\%]+)(\s*[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|\s*[0-9a-fA-F:]+)+$", re.M | re.S)
 
     # I was strugling with capturing multiple ips. It would match those lines, but only capture one ip. I finally asked copilot for help and it gave me this regex
-    re_valid_name_followed_by_ips = re.compile(r"^([a-zA-Z0-9_\-\.\@\#\$\:\%]+)((?:\s+[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|\s+[0-9a-fA-F:])+)$", re.M | re.S)
+    re_valid_name_followed_by_ips = re.compile(r"^([a-zA-Z0-9_\-\.\@\#\$\:\%]+)((?:\s+[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|\s+[0-9a-fA-F:]+)+)$", re.M | re.S)
     re_match_symbol = re.compile(r"[\@\#\$\%\\]")
         
     #print(querryCmd)
@@ -65,6 +65,7 @@ def getContainerIPs(replaceUnderscores: str = "-", replaceDots: str = ".", repla
             result = runprocess(['bash', '-c', querryCmd], capture_output=True, text=True)
         except CalledProcessError as e:
             stderr.write(f"Error running command '{str(querryCmd)}': {e}\n")
+            return {}
     else:
         stderr.write(f"Test: cmd[{querryCmd}]\n")
         result = testRunReturn

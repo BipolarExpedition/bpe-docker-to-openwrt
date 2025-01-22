@@ -1,5 +1,6 @@
 import pytest
-from subprocess import CalledProcessError, CompletedProcess
+#from subprocess import CalledProcessError
+from subprocess import CompletedProcess
 
 from bpe_docker_to_openwrt.main import getContainerIPs
 
@@ -21,7 +22,7 @@ prowlarr 172.18.0.96
             'sample1': '172.18.0.4',
             'traefik': '172.21.0.2',
             'plik': '172.21.0.3',
-            'subdomain_service': '172.18.0.52',
+            'subdomain-service': '172.18.0.52',
             'portainer': '172.17.0.2',
             'vpn': '172.18.0.2',
             'prowlarr': '172.18.0.96' }),
@@ -40,7 +41,7 @@ portainer 172.17.0.2
             'sample1': '172.18.0.4',
             'traefik': '172.21.0.2',
             'plik': '172.21.0.3',
-            'subdomain_service': '172.18.0.52',
+            'subdomain-service': '172.18.0.52',
             'portainer': '172.17.0.2' }),
 
     # stdout with IPv6 addresses 
@@ -57,7 +58,7 @@ portainer fe80::1ff:fe23:1234:abcd
             'sample1': 'fe80::1ff:fe23:4567:890a',
             'traefik': '172.21.0.2',
             'plik': 'fe80::1ff:fe23:4567:abcd',
-            'subdomain_service': '172.18.0.52',
+            'subdomain-service': '172.18.0.52',
             'portainer': 'fe80::1ff:fe23:1234:abcd' }),
 
     # stdout with blank lines (expect to ignore blank lines)
@@ -123,6 +124,14 @@ subdomain_service 172.18.0.52
             'sample1': '172.18.0.4',
             'traefik': '172.21.0.2',
             'subdomain-service': '172.18.0.52' }),
+    # Command returns an error
+    (CompletedProcess(
+        args=[], returncode=255,
+        stdout=r"""sample2 172.18.0.5
+**randomgarbage**
+traefik 172.21.0.2
+""", stderr=""),
+        {}),
 ])
 def test_getContainerIPs(testRunReturn, expected):
     container_listing = getContainerIPs(doTest=True, testRunReturn=testRunReturn)

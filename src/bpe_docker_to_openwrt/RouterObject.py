@@ -15,7 +15,7 @@ class RouterObject:
     def __init__(self, hostname: str, port: Optional[int] = None, identity_file: Optional[str] = None, username: Optional[str] = None, cmdname: Optional[str] = None):
         self._hostname = hostname
         self.setSSHcmd(cmdname)
-        self._port: Optional[int]
+        self._port: int
         self.setPort(port)
         self._identity_file: Optional[str]
         self.setIdentityFile(identity_file)
@@ -33,13 +33,13 @@ class RouterObject:
         self._cmd_commit: str = "uci commit dhcp"
         self._cmd_reload: str = "service dnsmasq reload"      
 
-    def setSSHcmd(self, cmdname: str | None, beQuiet: bool = False):
-        if cmdname is not None and len(cmdname) > 0:
-            cmdname = str(pathlib.Path(cmdname).expanduser().resolve())
+    def setSSHcmd(self, cmdnamein: str | None, beQuiet: bool = False):
+        if cmdnamein is not None and len(cmdnamein) > 0:
+            cmdname = str(pathlib.Path(cmdnamein).expanduser().resolve())
             if pathlib.Path(cmdname).exists() and pathlib.Path(cmdname).is_file() and access(cmdname, X_OK):
                 self._sshexe = cmdname
                 return
-            found = shellwhich(cmdname, mode=X_OK)
+            found = shellwhich(cmdnamein, mode=X_OK)
             if found is not None:
                 self._sshexe = found
                 return
@@ -62,7 +62,7 @@ class RouterObject:
         if port is not None and port > 0:
             self._port = port
         else:
-            self._port = None
+            self._port = 22
     
     def setIdentityFile(self, identity_file: str | pathlib.Path | None):
         if identity_file is not None and isinstance(identity_file, pathlib.Path):
@@ -113,6 +113,9 @@ class RouterObject:
             else:
                 stderr.write(f"Test: cmd[{shellcmd}]\n")
                 result = testRunReturn
+                if testRunReturn.stderr is None or len(testRunReturn.stderr) < 1:
+                    result.stderr = f"Test: cmd[{' '.join(shellcmd)}]\n"
+
         except CalledProcessError as e:
             stderr.write(f"Error running command '{str(cmd)}': {e}\n")
         
@@ -163,7 +166,7 @@ class RouterObject:
                 #ip = 
                 sections.pop()
                 for addr in sections:
-                    if addr == dns:
+                    if str(addr).lower() == str(dns).lower():
                         return mapping
         return ""
 
