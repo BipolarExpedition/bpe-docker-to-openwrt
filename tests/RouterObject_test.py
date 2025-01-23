@@ -195,6 +195,21 @@ testData_RouterObject_findDefinitionWithDNS = [
     ),
 ]
 
+# 'desc, definitions, expected'
+testData_RouterObject_mappingsFromDefinitions = [
+    ( "empty",
+        [],
+        {
+        }
+    ),
+    ( "single",
+        ["'/bob1/1.2.3.4'"],
+        {
+            'bob1' : '1.2.3.4'
+        }
+    ),
+]
+
 @pytest.mark.parametrize("dict_in,dict_expected", testData_RouterObject_init)
 def test_RouterObject_init(dict_in: Dict[str,Any], dict_expected: Dict[str, Any]):
     if 'port' in dict_in and 'identity_file' in dict_in and 'username' in dict_in and 'cmdname' in dict_in:
@@ -292,5 +307,14 @@ def test_RouterObject_findDefinitionWithDNS(desc, dns, definitions, last, expect
 
     testObj._lastDefinedExtraDNS = last
     res = testObj.findDefinitionWithDNS(dns,definitions=definitions)
+
+    assert res == expected
+
+@pytest.mark.parametrize('desc, definitions, expected', testData_RouterObject_mappingsFromDefinitions)
+def test_RouterObject_mappingsFromDefinitions(desc, definitions, expected):
+    testObj = RouterObject('hostname')
+
+    testObj._lastDefinedExtraDNS = []
+    res = testObj.mappingsFromDefinitions(definitions=definitions)
 
     assert res == expected
